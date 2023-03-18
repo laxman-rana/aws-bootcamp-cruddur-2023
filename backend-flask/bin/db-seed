@@ -1,0 +1,14 @@
+#! /usr/bin/bash
+
+echo "db-seed-load"
+
+seed_path="$(realpath .)/db/seed.sql"
+
+if [ "$1" = "prod" ]; then
+  echo "Running in production mode"
+else
+  echo "Running in development mode"
+  URL=$CONNECTION_URL
+fi
+
+psql $URL cruddur < $seed_path
