@@ -10,3 +10,5 @@ aws-xray-sdk
 
 psycopg[binary]
 psycopg[pool]
+
+Flask-AWSCognito
