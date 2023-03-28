@@ -1,15 +1,14 @@
 #! /usr/bin/bash
 
-echo "db-schema-load"
+echo "db-seed-load"
 
-schema_path="$(realpath .)/db/schema.sql"
+seed_path="$(realpath ..)/db/seed.sql"
 
 if [ "$1" = "prod" ]; then
   echo "Running in production mode"
-  URL=$PROD_CONNECTION_URL
 else
   echo "Running in development mode"
   URL=$CONNECTION_URL
 fi
 
-psql $URL cruddur < $schema_path
+psql $URL cruddur < $seed_path

@@ -12,3 +12,5 @@ psycopg[binary]
 psycopg[pool]
 
 Flask-AWSCognito
+
+boto3
