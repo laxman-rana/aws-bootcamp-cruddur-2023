@@ -22,7 +22,10 @@ export default function NotificationPage() {
     try {
       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/activities/notifications`
       const res = await fetch(backend_url, {
-        method: "GET"
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        },
       });
       let resJson = await res.json();
       if (res.status === 200) {
