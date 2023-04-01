@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from lib.db import db
 from lib.ddb import Ddb
+from flask import current_app as app
 
 class CreateMessage:
   # mode indicates if we want to create a new message_group or using an existing one
@@ -10,6 +11,9 @@ class CreateMessage:
       'errors': None,
       'data': None
     }
+    app.logger.debug('Mode')
+    app.logger.debug(mode)
+    app.logger.debug(user_receiver_handle)
 
     if (mode == "update"):
       if message_group_uuid == None or len(message_group_uuid) < 1:
@@ -37,7 +41,7 @@ class CreateMessage:
       }
     else:
       sql = db.template('users','create_message_users')
-
+      app.logger.debug(sql)
       if user_receiver_handle == None:
         rev_handle = ''
       else:
@@ -46,16 +50,16 @@ class CreateMessage:
         'cognito_user_id': cognito_user_id,
         'user_receiver_handle': rev_handle
       })
-      print("USERS =-=-=-=-==")
-      print(users)
+      app.logger.debug("USERS =-=-=-=-==")
+      app.logger.debug(users)
 
       my_user    = next((item for item in users if item["kind"] == 'sender'), None)
       other_user = next((item for item in users if item["kind"] == 'recv')  , None)
 
-      print("USERS=[my-user]==")
-      print(my_user)
-      print("USERS=[other-user]==")
-      print(other_user)
+      app.logger.debug("USERS=[my-user]==")
+      app.logger.debug(my_user)
+      app.logger.debug("USERS=[other-user]==")
+      app.logger.debug(other_user)
 
       ddb = Ddb.client()
 
