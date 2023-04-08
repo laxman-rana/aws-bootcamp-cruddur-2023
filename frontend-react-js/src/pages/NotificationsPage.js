@@ -9,6 +9,7 @@ import ReplyForm from '../components/ReplyForm';
 
 // [TODO] Authenication
 import Cookies from 'js-cookie'
+import { getAuthToken } from '../common/CheckAuth';
 
 export default function NotificationPage() {
   const [activities, setActivities] = React.useState([]);
@@ -21,10 +22,11 @@ export default function NotificationPage() {
   const loadData = async () => {
     try {
       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/activities/notifications`
+      const authToken = await getAuthToken();
       const res = await fetch(backend_url, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+          Authorization: `Bearer ${authToken}`
         },
       });
       let resJson = await res.json();

@@ -6,7 +6,7 @@ import DesktopNavigation  from '../components/DesktopNavigation';
 import MessageGroupFeed from '../components/MessageGroupFeed';
 import MessagesFeed from '../components/MessageFeed';
 import MessagesForm from '../components/MessageForm';
-import checkAuth from '../common/CheckAuth';
+import checkAuth, { getAuthToken } from '../common/CheckAuth';
 
 export default function MessageGroupPage() {
   const [messageGroups, setMessageGroups] = React.useState([]);
@@ -19,10 +19,11 @@ export default function MessageGroupPage() {
   const loadMessageGroupsData = async () => {
     try {
       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/message_groups`
+      const authToken = await getAuthToken();
       const res = await fetch(backend_url, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+          Authorization: `Bearer ${authToken}`
         },
       });
       let resJson = await res.json();
@@ -40,10 +41,11 @@ export default function MessageGroupPage() {
     try {
       const message_group_uuid = `${params.message_group_uuid}`;
       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/messages/${message_group_uuid}`
+      const authToken = await getAuthToken();
       const res = await fetch(backend_url, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+          Authorization: `Bearer ${authToken}`
         },
       });
       let resJson = await res.json();
