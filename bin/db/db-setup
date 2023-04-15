@@ -3,10 +3,11 @@
 
 #echo "==== db-setup"
 
-bin_path="$(realpath ..)/bin/db"
+ABS_PATH=$(readlink -f "$0")
+DB_PATH=$(dirname $ABS_PATH)
 
-source "$bin_path/db-drop"
-source "$bin_path/db-create"
-source "$bin_path/db-schema-load"
-source "$bin_path/db-seed"
-python "$bin_path/update_cognito_user_ids.py"
+source "$DB_PATH/db-drop"
+source "$DB_PATH/db-create"
+source "$DB_PATH/db-schema-load"
+source "$DB_PATH/db-seed"
+python "$DB_PATH/update_cognito_user_ids.py"
