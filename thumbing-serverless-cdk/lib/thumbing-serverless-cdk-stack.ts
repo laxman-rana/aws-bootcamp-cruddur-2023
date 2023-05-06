@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import { Construct } from 'constructs';
 import * as dotenv from 'dotenv';
 
@@ -14,7 +15,7 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
 
     // The code that defines your stack goes here
 
-    const bucketName: string = process.env.THUMBING_BUCKET_NAME || '';
+    const bucketName: string = process.env.ASSETS_BUCKET_NAME || '';
     const folderInput: string = process.env.THUMBING_S3_FOLDER_INPUT || '';
     const folderOutput: string = process.env.THUMBING_S3_FOLDER_OUTPUT || '';
     const webhookUrl: string = process.env.THUMBING_WEBHOOK_URL || '';
@@ -28,7 +29,8 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
     console.log('functionPath',functionPath)
 
     const bucket = this.createBucket(bucketName);
-    const lambda = this.createLambda(folderInput, bucketName, folderInput, folderOutput);
+    const lambdaa = this.createLambda(folderInput, folderOutput, functionPath, bucketName);
+    this.createS3NotifyToLambda(folderInput, lambdaa, bucket)
   }
 
   createBucket = (bucketName: string):s3.IBucket => {
@@ -39,7 +41,7 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
     return bucket;
   }
 
-  createLambda = (functionPath: string, bucketName: string, folderIntput: string, folderOutput: string):lambda.IFunction => {
+  createLambda = (folderIntput: string, folderOutput: string, functionPath: string, bucketName: string): lambda.IFunction  => {
     const code = lambda.Code.fromAsset(functionPath)
     const lambdaFunction = new lambda.Function(this, 'ThumbLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -55,5 +57,13 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
 
     });
     return lambdaFunction;
+  }
+
+  createS3NotifyToLambda(prefix: string, lambda: lambda.IFunction, bucket: s3.IBucket): void {
+    const destination = new s3n.LambdaDestination(lambda);
+    bucket.addEventNotification(s3.EventType.OBJECT_CREATED_PUT,
+      destination,
+      {prefix: prefix}
+    )
   }
 }
