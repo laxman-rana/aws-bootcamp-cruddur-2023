@@ -2,6 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import * as dotenv from 'dotenv';
@@ -31,9 +33,19 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
 
     const bucket = this.createBucket(bucketName);
     const lambdaa = this.createLambda(folderInput, folderOutput, functionPath, bucketName);
-    this.createS3NotifyToLambda(folderInput, lambdaa, bucket)
 
     const s3ReadWritePolicy = this.createPolicyBucketAccess(bucket.bucketArn);
+
+    const snsTopic = this.createSnsTopic(topicName)
+    this.createSnsSubscription(snsTopic, webhookUrl)
+
+    // S3 Event Notifications
+    this.createS3NotifyToSns(folderOutput,snsTopic,bucket)
+    this.createS3NotifyToLambda(folderInput, lambdaa, bucket)
+
+    const snsPublishPolicy = this.createPolicySnSPublish(snsTopic.topicArn)
+
+    lambdaa.addToRolePolicy(snsPublishPolicy);
     lambdaa.addToRolePolicy(s3ReadWritePolicy);
   }
 
@@ -83,4 +95,41 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
     });
     return s3ReadWritePolicy;
   }
+
+  createSnsTopic(topicName: string): sns.ITopic{
+    const logicalName = "ThumbingTopic";
+    const snsTopic = new sns.Topic(this, logicalName, {
+      topicName: topicName
+    });
+    return snsTopic;
+  }
+
+  createSnsSubscription(snsTopic: sns.ITopic, webhookUrl: string): sns.Subscription {
+    const snsSubscription = snsTopic.addSubscription(
+      new subscriptions.UrlSubscription(webhookUrl)
+    )
+    return snsSubscription;
+  }
+
+  createPolicySnSPublish(topicArn: string){
+    const snsPublishPolicy = new iam.PolicyStatement({
+      actions: [
+        'sns:Publish',
+      ],
+      resources: [
+        topicArn
+      ]
+    });
+    return snsPublishPolicy;
+  }
+  
+  createS3NotifyToSns(prefix: string, snsTopic: sns.ITopic, bucket: s3.IBucket): void {
+    const destination = new s3n.SnsDestination(snsTopic)
+    bucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED_PUT, 
+      destination,
+      {prefix: prefix}
+    );
+  }
+
 }
