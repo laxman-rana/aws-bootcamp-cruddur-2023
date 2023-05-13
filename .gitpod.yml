@@ -38,6 +38,10 @@ tasks:
       cd thumbing-serverless-cdk
       cp .env.example .env
       npm install
+  - name: avatar-lambda
+    before: |
+      cd aws/lambdas/process-images
+      npm install
 vscode:
   extensions:
     - 42Crunch.vscode-openapi
