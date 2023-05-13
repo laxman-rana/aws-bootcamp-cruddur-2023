@@ -17,43 +17,55 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
     super(scope, id, props);
 
     // The code that defines your stack goes here
-
-    const bucketName: string = process.env.ASSETS_BUCKET_NAME || '';
+    const uploadsBucketName: string = process.env.UPLOADS_BUCKET_NAME as string;
+    const assetsBucketName: string = process.env.ASSETS_BUCKET_NAME || '';
     const folderInput: string = process.env.THUMBING_S3_FOLDER_INPUT || '';
     const folderOutput: string = process.env.THUMBING_S3_FOLDER_OUTPUT || '';
     const webhookUrl: string = process.env.THUMBING_WEBHOOK_URL || '';
     const topicName: string = process.env.THUMBING_TOPIC_NAME || '';
     const functionPath: string = process.env.THUMBING_FUNCTION_PATH || '';
-    console.log('bucketName',bucketName)
-    console.log('folderInput',folderInput)
+
+    console.log('uploadsBucketName',uploadsBucketName)
+    console.log('assetsBucketName',assetsBucketName)
     console.log('folderOutput',folderOutput)
     console.log('webhookUrl',webhookUrl)
     console.log('topicName',topicName)
     console.log('functionPath',functionPath)
 
-    const bucket = this.createBucket(bucketName);
-    const lambdaa = this.createLambda(folderInput, folderOutput, functionPath, bucketName);
-
-    const s3ReadWritePolicy = this.createPolicyBucketAccess(bucket.bucketArn);
+    const uploadsBucket = this.createBucket(uploadsBucketName);
+    const assetsBucket = this.importBucket(assetsBucketName);
+    
+    const lambdaa = this.createLambda(folderInput, folderOutput, functionPath, assetsBucketName);
 
     const snsTopic = this.createSnsTopic(topicName)
     this.createSnsSubscription(snsTopic, webhookUrl)
 
-    // S3 Event Notifications
-    this.createS3NotifyToSns(folderOutput,snsTopic,bucket)
-    this.createS3NotifyToLambda(folderInput, lambdaa, bucket)
+     // S3 Event Notifications
+     this.createS3NotifyToLambda(folderInput, lambdaa, uploadsBucket)
+     this.createS3NotifyToSns(folderOutput,snsTopic, assetsBucket)
+     
+    const s3UploadsReadWritePolicy = this.createPolicyBucketAccess(uploadsBucket.bucketArn)
+    const s3AssetsReadWritePolicy = this.createPolicyBucketAccess(assetsBucket.bucketArn)
 
-    const snsPublishPolicy = this.createPolicySnSPublish(snsTopic.topicArn)
+     // attach policies for permissions
+     lambdaa.addToRolePolicy(s3UploadsReadWritePolicy);
+     lambdaa.addToRolePolicy(s3AssetsReadWritePolicy);
 
-    lambdaa.addToRolePolicy(snsPublishPolicy);
-    lambdaa.addToRolePolicy(s3ReadWritePolicy);
+   
+    //const snsPublishPolicy = this.createPolicySnSPublish(snsTopic.topicArn)
+
   }
 
   createBucket = (bucketName: string):s3.IBucket => {
-    const bucket  = new s3.Bucket(this, "ThumpingBucket", {
+    const bucket  = new s3.Bucket(this, "UploadsBucket", {
       bucketName: bucketName,
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
+    return bucket;
+  }
+
+  importBucket(bucketName: string): s3.IBucket {
+    const bucket = s3.Bucket.fromBucketName(this,"AssetsBucket",bucketName);
     return bucket;
   }
 
@@ -78,8 +90,8 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
   createS3NotifyToLambda(prefix: string, lambda: lambda.IFunction, bucket: s3.IBucket): void {
     const destination = new s3n.LambdaDestination(lambda);
     bucket.addEventNotification(s3.EventType.OBJECT_CREATED_PUT,
-      destination,
-      {prefix: prefix}
+      destination//,
+     // {prefix: prefix}
     )
   }
 
@@ -111,17 +123,17 @@ export class ThumbingServerlessCdkStack extends cdk.Stack {
     return snsSubscription;
   }
 
-  createPolicySnSPublish(topicArn: string){
-    const snsPublishPolicy = new iam.PolicyStatement({
-      actions: [
-        'sns:Publish',
-      ],
-      resources: [
-        topicArn
-      ]
-    });
-    return snsPublishPolicy;
-  }
+  // createPolicySnSPublish(topicArn: string){
+  //   const snsPublishPolicy = new iam.PolicyStatement({
+  //     actions: [
+  //       'sns:Publish',
+  //     ],
+  //     resources: [
+  //       topicArn
+  //     ]
+  //   });
+  //   return snsPublishPolicy;
+  // }
   
   createS3NotifyToSns(prefix: string, snsTopic: sns.ITopic, bucket: s3.IBucket): void {
     const destination = new s3n.SnsDestination(snsTopic)
