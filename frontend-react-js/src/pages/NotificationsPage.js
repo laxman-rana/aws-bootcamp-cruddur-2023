@@ -1,4 +1,3 @@
-import './NotificationPage.css';
 import React from "react";
 
 import DesktopNavigation  from '../components/DesktopNavigation';
@@ -7,11 +6,7 @@ import ActivityFeed from '../components/ActivityFeed';
 import ActivityForm from '../components/ActivityForm';
 import ReplyForm from '../components/ReplyForm';
 
-// [TODO] Authenication
-import Cookies from 'js-cookie'
-import { getAuthToken } from '../common/CheckAuth';
-
-export default function NotificationPage() {
+export default function NotificationsFeedPage() {
   const [activities, setActivities] = React.useState([]);
   const [popped, setPopped] = React.useState(false);
   const [poppedReply, setPoppedReply] = React.useState(false);
@@ -22,12 +17,8 @@ export default function NotificationPage() {
   const loadData = async () => {
     try {
       const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api/activities/notifications`
-      const authToken = await getAuthToken();
       const res = await fetch(backend_url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${authToken}`
-        },
+        method: "GET"
       });
       let resJson = await res.json();
       if (res.status === 200) {
@@ -76,12 +67,16 @@ export default function NotificationPage() {
           setActivities={setActivities} 
           activities={activities} 
         />
-        <ActivityFeed 
-          title="Notifications" 
-          setReplyActivity={setReplyActivity} 
-          setPopped={setPoppedReply} 
-          activities={activities} 
-        />
+        <div className='activity_feed'>
+          <div className='activity_feed_heading'>
+            <div className='title'>Notifications</div>
+          </div>
+          <ActivityFeed 
+            setReplyActivity={setReplyActivity} 
+            setPopped={setPoppedReply} 
+            activities={activities} 
+          />
+        </div>
       </div>
       <DesktopSidebar user={user} />
     </article>
