@@ -3,4 +3,5 @@
 echo "db-drop"
 
 NO_DB_CONNECTION_URL=$(sed 's/\/cruddur//g' <<<"$CONNECTION_URL")
+echo $NO_DB_CONNECTION_URL
 psql $NO_DB_CONNECTION_URL -c "DROP database IF EXISTS cruddur;"
