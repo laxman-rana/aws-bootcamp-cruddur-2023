@@ -1,4 +1,5 @@
 import './App.css';
+import './components/Popup.css';
 
 import { Amplify } from 'aws-amplify';
 

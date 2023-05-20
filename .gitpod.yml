@@ -19,12 +19,10 @@ tasks:
       source  "$THEIA_WORKSPACE_ROOT/backend-flask/db-update-sg-rule"
   - name: react-js
     command: |
-      "$THEIA_WORKSPACE_ROOT/bin/frontend/generate-env"
       cd frontend-react-js
       npm i
   - name: python-flask
     command: |
-      "$THEIA_WORKSPACE_ROOT/bin/backend/generate-env"
       cd backend-flask
       pip install -r requirements.txt
   - name: fargate
@@ -42,9 +40,6 @@ tasks:
     before: |
       cd aws/lambdas/process-images
       npm install
-  - name: ecr
-    command: |
-      "$THEIA_WORKSPACE_ROOT/bin/ecr/login"
 vscode:
   extensions:
     - 42Crunch.vscode-openapi
