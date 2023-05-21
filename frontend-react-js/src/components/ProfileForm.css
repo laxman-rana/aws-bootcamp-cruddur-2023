@@ -15,9 +15,9 @@
     resize: none;
     width: 100%;
     padding: 16px;
-    border: solid 1px var(--field-border);
-    background: var(--field-bg);
     color: #fff;
+    border: solid 1px rgba(149,0,255,0.1);
+    background: rgba(149,0,255,0.1);
   }
   
   .profile_popup .popup_content {

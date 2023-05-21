@@ -233,6 +233,7 @@ def data_update_profile():
     bio = request.json.get('bio', None)
     display_name = request.json.get('display_name', None)
     access_token = extract_access_token(request.headers)
+    print(access_token)
     try:
         claims = cognito_jwt_token.verify(access_token)
         cognito_user_id = claims['sub']
